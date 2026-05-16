@@ -39,7 +39,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+  run: dotnet test ProductApi.Tests/ProductApi.Tests.csproj --configuration Release
 
 
   publish:
