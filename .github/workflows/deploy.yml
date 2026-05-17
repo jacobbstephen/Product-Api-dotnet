@@ -1,0 +1,36 @@
+name: Deploy .NET API to VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VM
+        run: |
+          ssh ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            echo "Pulling latest image..."
+            docker pull jacbstpn/productapi:latest
+
+            echo "Stopping old container..."
+            docker stop productapi || true
+            docker rm productapi || true
+
+            echo "Starting new container..."
+            docker run -d -p 5000:8080 --name productapi jacbstpn/productapi:latest
+
+            echo "Deployment successful!"
+          EOF
